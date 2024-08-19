@@ -6,6 +6,7 @@
     <title>Gyroscope / Accelerometer Test</title>
     <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="graphData.js"></script>
     <style>
 #playersBox {
     display: flex;
@@ -47,95 +48,16 @@
         </div>
     </div>
     <h1>Gyroscope</h1>
+    <div id="gyroCountElm">Gyro: 0</div>
     <canvas id="GyroChart"></canvas>
-    <h1>Acelerometer</h1>
+    <h1>Accelerometer</h1>
+    <div id="acelCountElm">Acel: 0</div>
     <canvas id="AcelChart"></canvas>
     <script>
-const dataLengthLimit = 300;
-const gyroCanvas = document.getElementById('GyroChart');
-const acelCanvas = document.getElementById('AcelChart');
-gyroCanvas.height = 75;
-acelCanvas.height = 75;
-const gyroChart = new Chart(
-    gyroCanvas,
-    {
-        type: 'line',
-        data: {
-            labels: new Array(dataLengthLimit).fill(''),
-            datasets: [
-                {
-                    label: 'X',
-                    backgroundColor: 'rgb(255, 0, 0)',
-                    borderColor: 'rgb(255, 0, 0)',
-                    pointRadius : 0,
-                    data: new Array(dataLengthLimit).fill(undefined),
-                },
-                {
-                    label: 'Y',
-                    backgroundColor: 'rgb(0, 255, 0)',
-                    borderColor: 'rgb(0, 255, 0)',
-                    pointRadius : 0,
-                    data: new Array(dataLengthLimit).fill(undefined),
-                },
-                {
-                    label: 'Z',
-                    backgroundColor: 'rgb(0, 0, 255)',
-                    borderColor: 'rgb(0, 0, 255)',
-                    pointRadius : 0,
-                    data: new Array(dataLengthLimit).fill(undefined),
-                }
-            ]
-        },
-        options: { animation: {duration: 0} }
-    }
-);
-const acelChart = new Chart(
-    acelCanvas,
-    {
-        type: 'line',
-        data: {
-            labels: new Array(dataLengthLimit).fill(''),
-            datasets: [
-                {
-                    label: 'X',
-                    backgroundColor: 'rgb(255, 0, 0)',
-                    borderColor: 'rgb(255, 0, 0)',
-                    pointRadius : 0,
-                    data: new Array(dataLengthLimit).fill(undefined),
-                },
-                {
-                    label: 'Y',
-                    backgroundColor: 'rgb(0, 255, 0)',
-                    borderColor: 'rgb(0, 255, 0)',
-                    pointRadius : 0,
-                    data: new Array(dataLengthLimit).fill(undefined),
-                },
-                {
-                    label: 'Z',
-                    backgroundColor: 'rgb(0, 0, 255)',
-                    borderColor: 'rgb(0, 0, 255)',
-                    pointRadius : 0,
-                    data: new Array(dataLengthLimit).fill(undefined),
-                }
-            ]
-        },
-        options: { animation: {duration: 0} }
-    }
-);
-// function to update the chart 
-function addData(chart, dataX, dataY, dataZ) {
-    chart.data.labels.push('');
-    chart.data.datasets[0].data.push(dataX);
-    chart.data.datasets[1].data.push(dataY);
-    chart.data.datasets[2].data.push(dataZ);
-    chart.update();
-    if (chart.data.labels.length > dataLengthLimit) {
-        chart.data.labels.splice(0, 1);
-        chart.data.datasets[0].data.splice(0, 1);
-        chart.data.datasets[1].data.splice(0, 1);
-        chart.data.datasets[2].data.splice(0, 1);
-    }
-}
+const gyroChart = new graphData('GyroChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ]);
+const AcelChart = new graphData('AcelChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ]);
+let gyroCount = 0;
+let acelCount = 0;
 let currentPlayer = null;
 async function startRoom() {
     location.hash = ''; // clear the code in the URL
@@ -164,12 +86,16 @@ async function startRoom() {
 function startReading() {
     setInterval(() => {
         const gyro = currentPlayer.getState('gyro');
-        addData(gyroChart, gyro.x, gyro.y, gyro.z);
+        gyroChart.addData(gyro.x, gyro.y, gyro.z);
+        gyroCount++;
+        gyroCountElm.innerHTML = 'Gyro: ' + gyroCount;
     }, 50);
     
     setInterval(() => {
         const acel = currentPlayer.getState('acel');
-        addData(acelChart, acel.x, acel.y, acel.z);
+        acelChart.addData(acel.x, acel.y, acel.z);
+        acelCount++;
+        acelCountElm.innerHTML = 'Acel: ' + acelCount;
     }, 50);
 }
 startRoom();
