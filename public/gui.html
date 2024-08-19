@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gyroscope / Accelerometer Test</title>
-    <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js" crossorigin="anonymous"></script>
+    <title>Flicker GUI</title>
+    <script src="https://kit.fontawesome.com/5ab05bade1.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="graphData.js"></script>
     <style>
@@ -19,6 +19,7 @@
     height: 250px;
     border-radius: 25px;
     border: 5px solid rgb(160, 160, 160);
+    background-color: #4d4d4d;
 }
 .playerBox .centerBox {
     position: absolute;
@@ -43,31 +44,53 @@
     <script>
 const socket = io();
 const players = [];
+const playerBrowIds = [];
+const connectingPlayers = [];
+let gyroCount = 0;
+let acelCount = 0;
+currentPlayerToGraphFor = null;
 
 // Handle new player connection
 socket.on('player-connected', (player) => {
-    if (players.includes(player.id)) { // if player already connected before, set their status to connected
+    if (!connectingPlayers.includes(player.id)) {
+        connectingPlayers.push(player.id);
+        return;
+    }
+    if (playerBrowIds.includes(player.browId)) { // if player already connected before, set their status to connected
+        let oldI = playerBrowIds.indexOf(player.browId);
+        players.splice(oldI, 1);
+        playerBrowIds.splice(oldI, 1);
+        players.push(player.id);
+        playerBrowIds.push(player.browId);
+        
+        const playerDiv = document.querySelector(`.playerBox[browId="${player.browId}"]`);
+        playerDiv.id = player.id;
         playerDiv.getElementsByClassName('status')[0].innerHTML = '<i class="fa-solid fa-link"></i>';
         playerDiv.style.opacity = '1';
+        return;
     }
-    currentPlayerToGraphFor = player.id;
-    players.push(player.id);
+    connectingPlayers.push(player.id);
     const playersDiv = document.getElementById('playersBox');
     const playerDiv = document.createElement('div');
+    players.push(player.id);
+    playerBrowIds.push(player.browId);
     playerDiv.className = 'playerBox';
     playerDiv.id = player.id;
+    playerDiv.setAttribute('browId', player.browId);
     playerDiv.innerHTML = `
         <div class="centerBox">
             Player ${players.length}
             <br>
             <span class="status" style="color: gray; font-size: 40px;"><i class="fa-solid fa-link"></i></span>
         </div>`;
+    playerDiv.style.opacity = '1';
+    currentPlayerToGraphFor = player.id;
     playersDiv.appendChild(playerDiv);
 });
 
 // Handle player disconnection
 socket.on('player-disconnected', (player) => {
-    const playerDiv = document.getElementById(player.id);
+    const playerDiv = document.querySelector(`#${player.id}[browId="${player.browId}"]`);
     if (playerDiv) {
         playerDiv.getElementsByClassName('status')[0].innerHTML = '<i class="fa-solid fa-link-slash"></i>';
         playerDiv.style.opacity = '0.5';
@@ -81,18 +104,17 @@ socket.on('new-player-sensor-data', (msg) => {
         return;
     }
     if (currentPlayerToGraphFor == msg.id) {
-        gyroChart.addData(msg.data.gyro.x, msg.data.gyro.y, msg.data.gyro.z);
-        acelChart.addData(msg.data.acel.x, msg.data.acel.y, msg.data.acel.z);
-        document.getElementById('gyroCountElm').innerHTML = `Gyro: ${gyroCount++}`;
-        document.getElementById('acelCountElm').innerHTML = `Acel: ${acelCount++}`;
+        if (msg.data.gyro.x && msg.data.gyro.y && msg.data.gyro.z && msg.data.acel.x && msg.data.acel.y && msg.data.acel.z) {
+            gyroChart.addData(msg.data.gyro.x, msg.data.gyro.y, msg.data.gyro.z);
+            acelChart.addData(msg.data.acel.x, msg.data.acel.y, msg.data.acel.z);
+            document.getElementById('gyroCountElm').innerHTML = `Gyro: ${gyroCount++}`;
+            document.getElementById('acelCountElm').innerHTML = `Acel: ${acelCount++}`;
+        }
     }
 });
 
 const gyroChart = new graphData('GyroChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ]);
 const acelChart = new graphData('AcelChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ]);
-let gyroCount = 0;
-let acelCount = 0;
-currentPlayerToGraphFor = null;
     </script>
 </body>
 </html>

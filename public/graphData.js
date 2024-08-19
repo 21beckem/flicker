@@ -26,17 +26,18 @@ class graphData {
         );        
     }
     addData() {
-        if (arguments.length != this.numOfDataSets) {
+        let args = Array.from(arguments);
+        if (args.length != this.numOfDataSets) {
             console.error('Wrong number of arguments. Must provide 1 for each line on the graph.');
         }
         this.chart.data.labels.push('');
-        arguments.forEach((arg, i) => {
+        args.forEach((arg, i) => {
             this.chart.data.datasets[i].data.push(arg);
         });
         this.chart.update();
         if (this.chart.data.labels.length > this.dataLengthLimit) {
             this.chart.data.labels.splice(0, 1);
-            arguments.forEach((arg, i) => {
+            args.forEach((arg, i) => {
                 this.chart.data.datasets[i].data.splice(0, 1);
             });
         }

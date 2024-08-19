@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mate</title>
-    <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js" crossorigin="anonymous"></script>
+    <title>Flicker Mate</title>
     <script src="https://kit.fontawesome.com/5ab05bade1.js" crossorigin="anonymous"></script>
     <style>
 html, body {
@@ -35,18 +34,23 @@ watchbody {
         <div id="gyroCountElm">Gyro: 0</div>
         <div id="acelCountElm">Acel: 0</div>
     </watchbody>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-async function turnOnWakeLock(){try{wakeLock = await navigator.wakeLock.request("screen");}catch(err){}}
-const urlParams = new URLSearchParams(window.location.search);
-const roomCode = urlParams.get('mainRoomCode');
-let ME;
+// get unique id for this browser
+const browId = localStorage.getItem('browId') || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+localStorage.setItem('browId', browId);
+console.log('browId:', browId);
+
+async function turnOnWakeLock(){try{wakeLock = await navigator.wakeLock.request("screen");}catch(err){alert('Wake Lock not supported');}}
+let gyroData = {};
+let acelData = {};
 let gyroCount = 0;
 let acelCount = 0;
 
 function readSensors() {
     const gyro = new Gyroscope({ frequency: 60 });
     gyro.addEventListener("reading", (e) => {
-        ME.setState('gyro', {x: gyro.x, y: gyro.y, z: gyro.z});
+        gyroData = {x: gyro.x, y: gyro.y, z: gyro.z};
         gyroCount++;
         gyroCountElm.innerHTML = 'Gyro: ' + gyroCount;
     });
@@ -54,33 +58,34 @@ function readSensors() {
 
     const acel = new Accelerometer({ frequency: 60 });
     acel.addEventListener("reading", () => {
-        ME.setState('acel', {x: acel.x, y: acel.y, z: acel.z});
+        acelData = {x: acel.x, y: acel.y, z: acel.z};
         acelCount++;
         acelCountElm.innerHTML = 'Acel: ' + acelCount;
     });
     acel.start();
+
+    // Send data at 60Hz
+    setInterval(() => {
+        socket.emit('sensor-data', {
+            gyro: gyroData,
+            acel: acelData,
+        });
+    }, 1000 / 60);
 }
 
-async function init() {
-    await Playroom.insertCoin({
-        skipLobby: true,
-        roomCode: roomCode
-    }, () => {
-        ME = Playroom.me();
+function init() {
+    socket.on("connect", () => {
         statusElm.innerHTML = '<i class="fa-solid fa-link"></i>';
-
-        ME.onQuit(() => {
-            statusElm.innerHTML = '<i class="fa-solid fa-link-slash"></i>';
-        });
-        Playroom.onDisconnect(() => {
-            statusElm.innerHTML = '<i class="fa-solid fa-link-slash"></i>';
-        });
-
-        // send old code to hub
-        ME.setState('oldCode', urlParams.get('oldCode'));
-        readSensors();
+        socket.emit('set-brow-id', browId);
     });
+    
+    socket.on("disconnect", () => {
+        statusElm.innerHTML = '<i class="fa-solid fa-link-slash"></i>';
+    });
+    
+    readSensors();
 }
+const socket = io();
 init();
 turnOnWakeLock();
     </script>
