@@ -156,26 +156,20 @@ async function startRoom() {
             setTimeout(() => {
                 if (!player.getState('oldCode')) return;
                 confirmConnection( player.getState('oldCode') );
-            }, 500);
+            }, 1000);
         });
         Playroom.onPlayer
     });
 }
 function startReading() {
     setInterval(() => {
-        const gyro = Playroom.getState('gyro');
-        Playroom.setState('gyro', []);
-        gyro.forEach(el => {
-            addData(gyroChart, el.x, el.y, el.z);
-        });
+        const gyro = currentPlayer.getState('gyro');
+        addData(gyroChart, gyro.x, gyro.y, gyro.z);
     }, 50);
     
     setInterval(() => {
-        const acel = Playroom.getState('acel');
-        Playroom.setState('acel', []);
-        acel.forEach(el => {
-            addData(gyroChart, el.x, el.y, el.z);
-        });
+        const acel = currentPlayer.getState('acel');
+        addData(acelChart, acel.x, acel.y, acel.z);
     }, 50);
 }
 startRoom();

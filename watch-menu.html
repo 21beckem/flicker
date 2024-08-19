@@ -26,17 +26,13 @@ let ME;
 function readSensors() {
     const gyro = new Gyroscope({ frequency: 60 });
     gyro.addEventListener("reading", (e) => {
-        let current = ME.getState('gyro');
-        current.push({x: gyro.x, y: gyro.y, z: gyro.z});
-        ME.setState('gyro', current);
+        ME.setState('gyro', {x: gyro.x, y: gyro.y, z: gyro.z});
     });
     gyro.start();
 
     const acel = new Accelerometer({ frequency: 60 });
     acel.addEventListener("reading", () => {
-        let current = ME.getState('acel');
-        current.push({x: acel.x, y: acel.y, z: acel.z});
-        ME.setState('acel', current);
+        ME.setState('acel', {x: acel.x, y: acel.y, z: acel.z});
     });
     acel.start();
 }
@@ -47,8 +43,6 @@ async function init() {
         roomCode: roomCode
     }, () => {
         ME = Playroom.me();
-        ME.setState('gyro', []);
-        ME.setState('acel', []);
 
         // send old code to hub
         ME.setState('oldCode', urlParams.get('oldCode'));
