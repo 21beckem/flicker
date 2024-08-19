@@ -10,7 +10,7 @@ class graphData {
                 backgroundColor: lin.color,
                 borderColor: lin.color,
                 pointRadius : 0,
-                data: new Array(dataLengthLimit).fill(undefined),
+                data: new Array(this.dataLengthLimit).fill(undefined),
             }
         });
         this.chart = new Chart(
@@ -18,7 +18,7 @@ class graphData {
             {
                 type: 'line',
                 data: {
-                    labels: new Array(dataLengthLimit).fill(''),
+                    labels: new Array(this.dataLengthLimit).fill(''),
                     datasets: myDatasets
                 },
                 options: { animation: {duration: 0} }
@@ -34,7 +34,7 @@ class graphData {
             this.chart.data.datasets[i].data.push(arg);
         });
         this.chart.update();
-        if (this.chart.data.labels.length > dataLengthLimit) {
+        if (this.chart.data.labels.length > this.dataLengthLimit) {
             this.chart.data.labels.splice(0, 1);
             arguments.forEach((arg, i) => {
                 this.chart.data.datasets[i].data.splice(0, 1);
