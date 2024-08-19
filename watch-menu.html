@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mate</title>
+    <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js" crossorigin="anonymous"></script>
+    <style>
+html, body {
+    background-color: black;
+    color: white;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+    </style>
+</head>
+<body>
+    <script>
+async function turnOnWakeLock(){try{wakeLock = await navigator.wakeLock.request("screen");}catch(err){}}
+const urlParams = new URLSearchParams(window.location.search);
+const roomCode = urlParams.get('mainRoomCode');
+let ME;
+
+function readSensors() {
+    const gyro = new Gyroscope({ frequency: 60 });
+    gyro.addEventListener("reading", (e) => {
+        let current = ME.getState('gyro');
+        current.push({x: gyro.x, y: gyro.y, z: gyro.z});
+        ME.setState('gyro', current);
+    });
+    gyro.start();
+
+    const acel = new Accelerometer({ frequency: 60 });
+    acel.addEventListener("reading", () => {
+        let current = ME.getState('acel');
+        current.push({x: acel.x, y: acel.y, z: acel.z});
+        ME.setState('acel', current);
+    });
+    acel.start();
+}
+
+async function init() {
+    await Playroom.insertCoin({
+        skipLobby: true,
+        roomCode: roomCode
+    }, () => {
+        ME = Playroom.me();
+        ME.setState('gyro', []);
+        ME.setState('acel', []);
+
+        // send old code to hub
+        ME.setState('oldCode', urlParams.get('oldCode'));
+        readSensors();
+    });
+}
+init();
+turnOnWakeLock();
+    </script>
+</body>
+</html>

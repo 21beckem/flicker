@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js" crossorigin="anonymous"></script>
+    <title>Add Player</title>
+    <style>
+html, body {
+    background-color: black;
+    color: white;
+    margin: 0;
+    padding: 0;
+    overflow-y: hidden;
+}
+.loader {
+    display: block;
+    transform: rotateZ(45deg);
+    perspective: 1000px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    color: #fff;
+}
+
+.loader:before,
+.loader:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: inherit;
+    height: inherit;
+    border-radius: 50%;
+    transform: rotateX(70deg);
+    animation: 1s spin linear infinite;
+}
+
+.loader:after {
+    color: #00b7ff;
+    transform: rotateY(70deg);
+    animation-delay: .4s;
+}
+
+@keyframes rotate {
+    0% {
+        transform: translate(-50%, -50%) rotateZ(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotateZ(360deg);
+    }
+}
+
+@keyframes rotateccw {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(-360deg);
+    }
+}
+
+@keyframes spin {
+
+    0%,
+    100% {
+        box-shadow: .2em 0px 0 0px currentcolor;
+    }
+
+    12% {
+        box-shadow: .2em .2em 0 0 currentcolor;
+    }
+
+    25% {
+        box-shadow: 0 .2em 0 0px currentcolor;
+    }
+
+    37% {
+        box-shadow: -.2em .2em 0 0 currentcolor;
+    }
+
+    50% {
+        box-shadow: -.2em 0 0 0 currentcolor;
+    }
+
+    62% {
+        box-shadow: -.2em -.2em 0 0 currentcolor;
+    }
+
+    75% {
+        box-shadow: 0px -.2em 0 0 currentcolor;
+    }
+
+    87% {
+        box-shadow: .2em -.2em 0 0 currentcolor;
+    }
+}
+    </style>
+</head>
+<body>
+    <center>
+        <br><br>
+        <h3>Add Player</h3>
+        <a id="roomCode" style="font-size: 50px;">starting...</a>
+        <p><span class="loader"></span></p>
+    </center>
+    <script>
+async function newFlicker(mainRoomCode) {
+    // start a new room for this player
+    await Playroom.insertCoin({
+        skipLobby: true
+    }, () => {
+        location.hash = ''; // clear the code in the URL
+    });
+
+    // display the room code
+    roomCode.innerHTML = Playroom.getRoomCode();
+
+    // send room code to hub
+    window.parent.postMessage(Playroom.getRoomCode(), "*");
+
+    // add callback for when player connects
+    Playroom.onPlayerJoin(async (player) => {
+        if (player.id == Playroom.me().id) return;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        Playroom.setState('mainRoomCode', mainRoomCode);
+    });
+}
+const urlParams = new URLSearchParams(window.location.search);
+newFlicker( urlParams.get('mainRoomCode') );
+    </script>
+</body>
+</html>

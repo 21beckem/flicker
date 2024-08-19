@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyroscope / Accelerometer Test</title>
+    <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+#playersBox {
+    display: flex;
+    width: 100%;
+}
+.addFlickerWindow {
+    position: relative;
+    overflow-y: hidden;
+    width: 250px;
+    height: 250px;
+    border-radius: 25px;
+    border: 5px solid rgb(160, 160, 160);
+}
+.addFlickerWindow .plus {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 100px;
+    color: rgb(160, 160, 160);
+    user-select: none;
+    cursor: pointer;
+}
+.addFlickerWindow .centerBox {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    font-size: 50px;
+    color: white;
+}
+    </style>
+</head>
+<body>
+    <div id="playersBox">
+        <div id="addNewFlickerBtn" class="addFlickerWindow">
+            <div class="plus" onclick="openAddFlickerWindow()">+</div>
+        </div>
+    </div>
+    <h1>Gyroscope</h1>
+    <canvas id="GyroChart"></canvas>
+    <h1>Acelerometer</h1>
+    <canvas id="AcelChart"></canvas>
+    <script>
+const dataLengthLimit = 300;
+const gyroCanvas = document.getElementById('GyroChart');
+const acelCanvas = document.getElementById('AcelChart');
+gyroCanvas.height = 75;
+acelCanvas.height = 75;
+const gyroChart = new Chart(
+    gyroCanvas,
+    {
+        type: 'line',
+        data: {
+            labels: new Array(dataLengthLimit).fill(''),
+            datasets: [
+                {
+                    label: 'X',
+                    backgroundColor: 'rgb(255, 0, 0)',
+                    borderColor: 'rgb(255, 0, 0)',
+                    pointRadius : 0,
+                    data: new Array(dataLengthLimit).fill(undefined),
+                },
+                {
+                    label: 'Y',
+                    backgroundColor: 'rgb(0, 255, 0)',
+                    borderColor: 'rgb(0, 255, 0)',
+                    pointRadius : 0,
+                    data: new Array(dataLengthLimit).fill(undefined),
+                },
+                {
+                    label: 'Z',
+                    backgroundColor: 'rgb(0, 0, 255)',
+                    borderColor: 'rgb(0, 0, 255)',
+                    pointRadius : 0,
+                    data: new Array(dataLengthLimit).fill(undefined),
+                }
+            ]
+        },
+        options: { animation: {duration: 0} }
+    }
+);
+const acelChart = new Chart(
+    acelCanvas,
+    {
+        type: 'line',
+        data: {
+            labels: new Array(dataLengthLimit).fill(''),
+            datasets: [
+                {
+                    label: 'X',
+                    backgroundColor: 'rgb(255, 0, 0)',
+                    borderColor: 'rgb(255, 0, 0)',
+                    pointRadius : 0,
+                    data: new Array(dataLengthLimit).fill(undefined),
+                },
+                {
+                    label: 'Y',
+                    backgroundColor: 'rgb(0, 255, 0)',
+                    borderColor: 'rgb(0, 255, 0)',
+                    pointRadius : 0,
+                    data: new Array(dataLengthLimit).fill(undefined),
+                },
+                {
+                    label: 'Z',
+                    backgroundColor: 'rgb(0, 0, 255)',
+                    borderColor: 'rgb(0, 0, 255)',
+                    pointRadius : 0,
+                    data: new Array(dataLengthLimit).fill(undefined),
+                }
+            ]
+        },
+        options: { animation: {duration: 0} }
+    }
+);
+// function to update the chart 
+function addData(chart, dataX, dataY, dataZ) {
+    chart.data.labels.push('');
+    chart.data.datasets[0].data.push(dataX);
+    chart.data.datasets[1].data.push(dataY);
+    chart.data.datasets[2].data.push(dataZ);
+    chart.update();
+    if (chart.data.labels.length > dataLengthLimit) {
+        chart.data.labels.splice(0, 1);
+        chart.data.datasets[0].data.splice(0, 1);
+        chart.data.datasets[1].data.splice(0, 1);
+        chart.data.datasets[2].data.splice(0, 1);
+    }
+}
+let currentPlayer = null;
+async function startRoom() {
+    location.hash = ''; // clear the code in the URL
+    await Playroom.insertCoin({
+        skipLobby: true
+    }, () => {
+        console.log('Room Started', Playroom.getRoomCode());
+        
+        location.hash = ''; // clear the code in the URL
+        Playroom.onPlayerJoin(async (player) => {
+            currentPlayer = player;
+            if (player.id == Playroom.me().id) return;
+            console.log('new player:', player.id);
+            console.log(player);
+            player.onQuit((state) => {
+                console.log(`${state.id} quit!`);
+            });
+            setTimeout(() => {
+                if (!player.getState('oldCode')) return;
+                confirmConnection( player.getState('oldCode') );
+            }, 500);
+        });
+        Playroom.onPlayer
+    });
+}
+function startReading() {
+    setInterval(() => {
+        const gyro = Playroom.getState('gyro');
+        Playroom.setState('gyro', []);
+        gyro.forEach(el => {
+            addData(gyroChart, el.x, el.y, el.z);
+        });
+    }, 50);
+    
+    setInterval(() => {
+        const acel = Playroom.getState('acel');
+        Playroom.setState('acel', []);
+        acel.forEach(el => {
+            addData(gyroChart, el.x, el.y, el.z);
+        });
+    }, 50);
+}
+startRoom();
+
+let playersI = 1;
+let currentNewPlayerWaitingForCode = null;
+function openAddFlickerWindow() {
+    if (!Playroom.getRoomCode()) return;
+    let flickersBox = document.getElementById('playersBox');
+    flickersBox.innerHTML = `<div style="display: none; background-color: black;" playersi="${playersI}" class="addFlickerWindow"></div><iframe id="playersI_${playersI}" class="addFlickerWindow" src="add-flicker.html?mainRoomCode=${Playroom.getRoomCode()}" frameborder="0"></iframe>` + flickersBox.innerHTML;
+    currentNewPlayerWaitingForCode = document.getElementById(`playersI_${playersI}`);
+    document.getElementById('addNewFlickerBtn').style.display = 'none';
+    playersI++;
+}
+window.addEventListener('message', function(event) {
+    document.getElementById('addNewFlickerBtn').style.display = '';
+    currentNewPlayerWaitingForCode.id = 'playersI_' + event.data;
+    currentNewPlayerWaitingForCode = null;
+});
+function confirmConnection(oldCode) {
+    console.log('confirmConnection', oldCode);
+    let thisIframe = document.getElementById('playersI_' + oldCode);
+    let newBox = thisIframe.previousElementSibling;
+    thisIframe.remove();
+    newBox.id = 'playersI_' + oldCode;
+    newBox.style.display = '';
+    newBox.innerHTML = `<div class="status" onclick="openAddFlickerWindow()">
+            <div class="centerBox">
+                Player ${newBox.getAttribute('playersi')}
+                <br>
+                <span style="color: gray; font-size: 40px;">Connected</span>
+            </div>
+        </div>`;
+
+    startReading();
+}
+    </script>
+</body>
+</html>

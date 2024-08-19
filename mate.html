@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mate</title>
+    <script src="https://unpkg.com/playroomkit/multiplayer.full.umd.js" crossorigin="anonymous"></script>
+    <style>
+html, body {
+    background-color: black;
+    color: white;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+input {
+    width: 200px;
+    font-size: 70px;
+    background-color: transparent;
+    border: 1px solid white;
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+}
+#joinBtn {
+    font-size: 70px;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0px 20px;
+    border: 1px solid white;
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+}
+    </style>
+</head>
+<br><br>
+<center>
+    <br><br>
+    <h1>Connect Code</h1>
+    <input type="text" id="codeInput">
+    <br><br>
+    <button id="joinBtn" onclick="joinRoom()">Join</button>
+</center>
+<body>
+    <script>
+async function joinRoom() {
+    location.hash = ''; // clear the code in the URL
+    if (!Playroom.getRoomCode()) {
+        // start multiplayer
+        await Playroom.insertCoin({
+            skipLobby: true,
+            roomCode: document.getElementById('codeInput').value
+        }, async () => {
+            location.hash = ''; // clear the code in the URL
+            console.log('joined room', Playroom.getRoomCode());
+            
+            await Playroom.waitForState('mainRoomCode');
+            location.href = 'watch-menu.html?mainRoomCode=' + Playroom.getState('mainRoomCode') + '&oldCode=' + Playroom.getRoomCode();
+        });
+    }
+}
+    </script>
+</body>
+</html>
