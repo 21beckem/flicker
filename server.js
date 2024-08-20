@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const express = require('express');
+const http = require('http');
 const https = require('https');
 const socketIo = require('socket.io');
 const opn = require('opn');
@@ -55,9 +56,9 @@ IP.2 = ${ipAddress}
     try {
         // Generate the private key and self-signed certificate
         const command = `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -config "${configPath}"`;
-        console.log('Running OpenSSL command:', command);
+        // console.log('Running OpenSSL command:', command);
         const output = execSync(command, { stdio: 'inherit' });
-        console.log('OpenSSL output:', output);
+        // console.log('OpenSSL output:', output);
     } catch (error) {
         console.error('Error generating the self-signed certificate:', error.message);
         console.error('Error details:', error);
@@ -82,6 +83,15 @@ const io = socketIo(server);
 
 // Serve static files
 app.use(express.static('public'));
+const PORT = 1022;
+
+// Create an HTTP server to redirect to mate over secure HTTPS
+http.createServer(function(req,res){
+    res.writeHead(301, {
+            "Location": "https://" + ipAddress + ":"+ PORT + '/mate.html'
+        });
+    res.end()
+}).listen(80);
 
 
 // #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
@@ -92,7 +102,10 @@ let players = {};
 
 // Handle player connection
 io.on('connection', (socket) => {
-    if (socket.handshake.headers.referer.includes('gui.html')) return;
+    if (socket.handshake.headers.referer.includes('gui.html')) {
+        socket.emit('gui-ip', ipAddress);
+        return;
+    }
     console.log(socket.handshake.headers.referer);
     console.log('A player connected:', socket.id);
 
@@ -138,7 +151,6 @@ io.on('connection', (socket) => {
 });
 
 // Start the server
-const PORT = 3000;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     // Open the GUI in the default browser

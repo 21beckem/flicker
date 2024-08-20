@@ -29,11 +29,24 @@
     transform: translate(-50%, -50%);
     font-size: 50px;
     color: white;
+    width: 100%;
+}
+.playerBox .centerBox .littleText {
+    font-size: 20px;
+    color: #ebebeb;
 }
     </style>
 </head>
 <body>
-    <div id="playersBox"></div>
+    <div id="playersBox">
+        <div id="newPlayerInstructionsBox" class="playerBox" style="border-color: #e1e1e1; background-color: #b5b5b5; opacity: 1;">
+            <div class="centerBox">
+                <p class="littleText">On your watch, open</p>
+                <span id="ipAddressElm" style="font-size: 35px;">.</span>
+                <p class="littleText">to connect as a player</p>
+            </div>
+        </div>
+    </div>
     <h1>Gyroscope</h1>
     <div id="gyroCountElm">Gyro: 0</div>
     <canvas id="GyroChart"></canvas>
@@ -82,10 +95,11 @@ socket.on('player-connected', (player) => {
             Player ${players.length}
             <br>
             <span class="status" style="color: gray; font-size: 40px;"><i class="fa-solid fa-link"></i></span>
-        </div>`;
+        </div>
+    `;
     playerDiv.style.opacity = '1';
     currentPlayerToGraphFor = player.id;
-    playersDiv.appendChild(playerDiv);
+    playersDiv.insertBefore(playerDiv, document.getElementById('newPlayerInstructionsBox'));
 });
 
 // Handle player disconnection
@@ -111,6 +125,10 @@ socket.on('new-player-sensor-data', (msg) => {
             document.getElementById('acelCountElm').innerHTML = `Acel: ${acelCount++}`;
         }
     }
+});
+
+socket.on('gui-ip', (ip) => {
+    ipAddressElm.innerHTML = ip;
 });
 
 const gyroChart = new graphData('GyroChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ]);
