@@ -26,6 +26,7 @@ function createSelfSignedCertificate(ipAddress) {
     const keyPath = path.join(__dirname, 'server.key');
     const certPath = path.join(__dirname, 'server.cert');
     const configPath = path.join(__dirname, 'san.cnf');
+    const opensslPath = path.join(__dirname, 'openssl/openssl.exe');
 
     // Write OpenSSL config for SAN
     const sanConfig = `
@@ -55,7 +56,7 @@ IP.2 = ${ipAddress}
 
     try {
         // Generate the private key and self-signed certificate
-        const command = `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -config "${configPath}"`;
+        const command = `${opensslPath} req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -config "${configPath}"`;
         // console.log('Running OpenSSL command:', command);
         const output = execSync(command, { stdio: 'inherit' });
         // console.log('OpenSSL output:', output);
