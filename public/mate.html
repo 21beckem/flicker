@@ -15,24 +15,31 @@ html, body {
     width: 100%;
 }
 watchbody {
-    width: 425px;
-    height: 425px;
+    padding: 15px;
+    width: 395px;
+    height: 395px;
     align-items: center;
     text-align: center;
     border: 1px solid white;
+    border-radius: 50%;
     display: block;
     position: relative;
     font-size: xx-large;
+}
+#punchBtn {
+    width: 100%;
+    font-size: 200px;
+    cursor: pointer;
+    margin-top: 20px;
 }
     </style>
 </head>
 <body>
     <watchbody>
-        <br>
         <div id="statusElm"><i class="fa-solid fa-link-slash"></i></div>
-        <br>
         <div id="gyroCountElm">Gyro: 0</div>
         <div id="acelCountElm">Acel: 0</div>
+        <div id="punchBtn" style="display: none;"><i class="fa-solid fa-hand-fist"></i></div>
     </watchbody>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -46,6 +53,8 @@ let gyroData = {};
 let acelData = {};
 let gyroCount = 0;
 let acelCount = 0;
+
+const trainingMode = true;
 
 function readSensors() {
     const gyro = new Gyroscope({ frequency: 60 });
@@ -64,12 +73,63 @@ function readSensors() {
     });
     acel.start();
 
-    // Send data at 60Hz
+    if (trainingMode) {
+        trainingModeInit();
+    } else {
+        // Send data at 60Hz
+        setInterval(() => {
+            socket.emit('sensor-data', {
+                gyro: gyroData,
+                acel: acelData,
+            });
+        }, 1000 / 60);
+    }
+}
+function trainingModeInit() {
+    const backgroundDSize = 60;
+    const punchDSize = 120;
+    const punchBtn = document.getElementById('punchBtn');
+    let punchBtnDisabled = false;
+    let punching = false;
+    let backgroundArr = [];
+    let punchArr = [];
+    punchBtn.style.display = '';
+    punchBtn.addEventListener('click', () => {
+        if (punchBtnDisabled) return;
+        punchBtnDisabled = true;
+        punchBtn.innerHTML = '3';
+        setTimeout(() => { punchBtn.innerHTML = '2'; }, 500);
+        setTimeout(() => { punchBtn.innerHTML = '1'; }, 1000);
+        setTimeout(() => {
+            punchBtn.innerHTML = '<i class="fa-solid fa-video"></i>';
+            punching = true;
+        }, 1500);
+    });
+
     setInterval(() => {
-        socket.emit('sensor-data', {
-            gyro: gyroData,
-            acel: acelData,
-        });
+        if (punching) {
+            punchArr.push({
+                gyro: gyroData,
+                acel: acelData,
+            });
+            if (punchArr.length >= punchDSize) {
+                socket.emit('punch-sample', punchArr);
+                punching = false;
+                punchBtnDisabled = false;
+                punchBtn.innerHTML = '<i class="fa-solid fa-hand-fist"></i>';
+                punchArr = [];
+                backgroundArr = [];
+            }
+        } else {
+            backgroundArr.push({
+                gyro: gyroData,
+                acel: acelData,
+            });
+            if (backgroundArr.length >= backgroundDSize) {
+                socket.emit('background-sample', backgroundArr);
+                backgroundArr = [];
+            }
+        }
     }, 1000 / 60);
 }
 

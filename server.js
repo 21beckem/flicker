@@ -56,7 +56,7 @@ IP.2 = ${ipAddress}
 
     try {
         // Generate the private key and self-signed certificate
-        const command = `${opensslPath} req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -config "${configPath}"`;
+        const command = `"${opensslPath}" req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -config "${configPath}"`;
         // console.log('Running OpenSSL command:', command);
         const output = execSync(command, { stdio: 'inherit' });
         // console.log('OpenSSL output:', output);
@@ -136,6 +136,29 @@ io.on('connection', (socket) => {
             // Update the GUI
             io.emit('new-player-sensor-data', {id: socket.id, data: data});
         }
+    });
+
+    socket.on('punch-sample', (dataArr) => {
+        const dataStr = JSON.stringify(dataArr);
+        const fileName = `punch-sample-${Date.now()}.json`;
+        fs.writeFile(`data_samples/punches/${fileName}`, dataStr, (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log(`Saved data to ${fileName}`);
+            }
+        });
+    });
+    socket.on('background-sample', (dataArr) => {
+        const dataStr = JSON.stringify(dataArr);
+        const fileName = `background-sample-${Date.now()}.json`;
+        fs.writeFile(`data_samples/background/${fileName}`, dataStr, (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log(`Saved data to ${fileName}`);
+            }
+        });
     });
 
     // Handle player disconnection
