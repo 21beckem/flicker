@@ -131,8 +131,8 @@ socket.on('gui-ip', (ip) => {
     ipAddressElm.innerHTML = ip;
 });
 
-const gyroChart = new graphData('GyroChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ]);
-const acelChart = new graphData('AcelChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ]);
+const gyroChart = new graphData('GyroChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ], {liveData:true});
+const acelChart = new graphData('AcelChart', [ {label: 'X', color: 'red'}, {label: 'Y', color: 'green'}, {label: 'Z', color: 'blue'} ], {liveData:true});
     </script>
 </body>
 </html>
