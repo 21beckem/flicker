@@ -43,6 +43,7 @@ function handleFiles(event) {
                 const li = document.createElement('li');
                 li.textContent = file.name;
                 fileList.appendChild(li);
+                console.log('data-length:', data.length);
             } catch (err) {
                 console.error("Error parsing JSON:", err);
             }

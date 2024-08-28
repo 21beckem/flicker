@@ -107,7 +107,6 @@ io.on('connection', (socket) => {
         socket.emit('gui-ip', ipAddress);
         return;
     }
-    console.log(socket.handshake.headers.referer);
     console.log('A player connected:', socket.id);
 
     // Add player to the list with an empty history array

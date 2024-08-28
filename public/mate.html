@@ -13,14 +13,14 @@ html, body {
     padding: 0;
     height: 100%;
     width: 100%;
+    /* overscroll-behavior-y: contain;  //   TURN THIS BACK ON IN THE FUTURE WHEN MAKING THE FULL UI!!   */
 }
 watchbody {
     padding: 15px;
-    width: 395px;
-    height: 395px;
+    width: 366px;
+    height: 366px;
     align-items: center;
     text-align: center;
-    border: 1px solid white;
     border-radius: 50%;
     display: block;
     position: relative;
@@ -48,7 +48,17 @@ const browId = localStorage.getItem('browId') || Math.random().toString(36).subs
 localStorage.setItem('browId', browId);
 console.log('browId:', browId);
 
-async function turnOnWakeLock(){try{wakeLock = await navigator.wakeLock.request("screen");}catch(err){alert('Wake Lock not supported');}}
+async function turnOnWakeLock(){
+    try{
+        wakeLock = await navigator.wakeLock.request("screen");
+        if (!window.globalThis.alreadyAlertedAboutWakeLock) {
+            alert('Wake Lock enabled');
+            window.globalThis.alreadyAlertedAboutWakeLock = true;
+        }
+    }catch(err){
+        alert('Wake Lock not supported');
+    }
+}
 let gyroData = {};
 let acelData = {};
 let gyroCount = 0;
@@ -147,7 +157,7 @@ function init() {
 }
 const socket = io();
 init();
-turnOnWakeLock();
+setInterval(turnOnWakeLock, 1000);
     </script>
 </body>
 </html>
