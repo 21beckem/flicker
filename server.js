@@ -89,7 +89,7 @@ const PORT = 1022;
 // Create an HTTP server to redirect to mate over secure HTTPS
 http.createServer(function(req,res){
     res.writeHead(301, {
-            "Location": "https://" + ipAddress + ":"+ PORT + '/mate.html'
+            "Location": "https://" + ipAddress + ":"+ PORT + '/mate_predict.html'
         });
     res.end()
 }).listen(80);

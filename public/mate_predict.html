@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flicker Mate</title>
+    <script src="https://kit.fontawesome.com/5ab05bade1.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+    <style>
+html, body {
+    background-color: black;
+    color: white;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    /* overscroll-behavior-y: contain;  //   TURN THIS BACK ON IN THE FUTURE WHEN MAKING THE FULL UI!!   */
+}
+watchbody {
+    padding: 15px;
+    width: 366px;
+    height: 366px;
+    align-items: center;
+    text-align: center;
+    border-radius: 50%;
+    display: block;
+    position: relative;
+    font-size: xx-large;
+}
+#punchBtn {
+    width: 100%;
+    font-size: 200px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+    </style>
+</head>
+<body>
+    <watchbody>
+        <div id="statusElm"></div>
+        <div id="gyroCountElm">Gyro: 0</div>
+        <div id="acelCountElm">Acel: 0</div>
+        <div id="punchBtn" style="display: none;"><i class="fa-solid fa-hand-fist"></i></div>
+    </watchbody>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="flicker.js"></script>
+    <script>
+const Flicker = new FlickerMate({
+    statusElm: document.getElementById('statusElm'),
+    onNewGyroData: (data) => {
+        document.getElementById('gyroCountElm').innerHTML = `Gyro: ${Flicker.gyroCount}`;
+    },
+    onNewAcelData: (data) => {
+        document.getElementById('acelCountElm').innerHTML = `Acel: ${Flicker.acelCount}`;
+    }
+});
+Flicker.loadModel('know_a_punch_1');
+    </script>
+</body>
+</html>
